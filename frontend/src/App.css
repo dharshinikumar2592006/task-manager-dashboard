@@ -1,0 +1,45 @@
+
+body {
+  margin: 0;
+  background-color: #f8f9fa;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #343a40;
+}
+
+.card {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  padding: 15px;
+  font-size: 20px;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.card-body {
+  min-height: 200px;
+  padding: 20px;
+}
+
+.task-item {
+  padding-bottom: 10px;
+}
+
+.btn {
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.input-group .form-control {
+  padding: 10px;
+}
