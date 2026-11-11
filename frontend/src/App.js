@@ -3,8 +3,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
-const API = "https://task-manager-dashboard-lrt7.onrender.com/api/tasks";
-
+const API = `${process.env.REACT_APP_API_URL}/api/tasks`;
 function App() {
   const [title, setTitle] = useState("");
   const [tasks, setTasks] = useState([]);
