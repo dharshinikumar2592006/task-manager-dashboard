@@ -12,26 +12,45 @@ app.use(express.json());
 // Task Schema
 const Task = mongoose.model(
   "Task",
-  new mongoose.Schema({
-    title: {
-      type: String,
-      required: true,
+  new mongoose.Schema(
+    {
+      title: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      status: {
+        type: String,
+        enum: ["Pending", "Ongoing", "Completed"],
+        default: "Pending",
+      },
     },
-    status: {
-      type: String,
-      enum: ["Pending", "Ongoing", "Completed"],
-      default: "Pending",
-    },
-  })
+    { timestamps: true }
+  )
 );
+
+// Check database connection
+function checkDB(req, res, next) {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Database is not connected. Please try again later.",
+    });
+  }
+  next();
+}
 
 // Home route
 app.get("/", (req, res) => {
   res.send("Task Manager Backend is running!");
 });
 
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "Backend is running" });
+});
+
 // Get all tasks
-app.get("/api/tasks", async (req, res) => {
+app.get("/api/tasks", checkDB, async (req, res) => {
   try {
     const tasks = await Task.find();
     res.json(tasks);
@@ -41,7 +60,7 @@ app.get("/api/tasks", async (req, res) => {
 });
 
 // Add task
-app.post("/api/tasks", async (req, res) => {
+app.post("/api/tasks", checkDB, async (req, res) => {
   try {
     const task = await Task.create({
       title: req.body.title,
@@ -54,7 +73,7 @@ app.post("/api/tasks", async (req, res) => {
 });
 
 // Update task
-app.put("/api/tasks/:id", async (req, res) => {
+app.put("/api/tasks/:id", checkDB, async (req, res) => {
   try {
     const task = await Task.findByIdAndUpdate(
       req.params.id,
@@ -73,7 +92,7 @@ app.put("/api/tasks/:id", async (req, res) => {
 });
 
 // Delete task
-app.delete("/api/tasks/:id", async (req, res) => {
+app.delete("/api/tasks/:id", checkDB, async (req, res) => {
   try {
     const task = await Task.findByIdAndDelete(req.params.id);
 
@@ -87,20 +106,23 @@ app.delete("/api/tasks/:id", async (req, res) => {
   }
 });
 
-// Connect database and start server
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/taskmanager";
+// Start server FIRST
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log("MongoDB connected successfully!");
+// Connect MongoDB separately
+const MONGODB_URI = process.env.MONGODB_URI;
 
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on port ${PORT}`);
+if (!MONGODB_URI) {
+  console.error("MONGODB_URI is missing. Add it in Render Environment Variables.");
+} else {
+  mongoose
+    .connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 })
+    .then(() => {
+      console.log("MongoDB connected successfully!");
+    })
+    .catch((error) => {
+      console.error("MongoDB connection failed:", error.message);
     });
-  })
-  .catch((error) => {
-    console.error("MongoDB connection failed:", error.message);
-    process.exit(1);
-  });
+}
